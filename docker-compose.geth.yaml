@@ -1,0 +1,103 @@
+version: '3'
+
+services:
+  bootnode:
+    build: 
+      context: ${DOCKER_CONTEXT}
+      dockerfile: ${DOCKERFILE}
+    volumes:
+      - shared:${SHARED_DIR}
+      - config:${CONFIG_DIR}
+    env_file:
+      - path: './deployments/environments/local/bootnode.env'
+        required: true 
+    environment:
+      - NETWORKID=${NETWORKID}
+      - SHARED_DIR=${SHARED_DIR}
+      - CONFIG_DIR=${CONFIG_DIR}
+      - BOOTNODE_ADDRESS=${BOOTNODE_ADDRESS}
+      - BOOTNODE_PORT=${BOOTNODE_PORT}
+      - BOOTNODE_DIR=${BOOTNODE_DIR}
+      - GENESIS_FILE=${GENESIS_FILE}
+    ports:
+      - ${BOOTNODE_PORT}:${BOOTNODE_PORT}
+    networks:
+      ethnet:
+        ipv4_address: ${BOOTNODE_ADDRESS}
+  
+  node_1:
+    build: 
+      context: ${DOCKER_CONTEXT}
+      dockerfile: ${DOCKERFILE}
+    volumes:
+      - shared:${SHARED_DIR}
+      - config:${CONFIG_DIR}
+    env_file:
+      - path: './deployments/environments/local/node1.env'
+        required: true 
+    environment:
+      - NETWORKID=${NETWORKID}
+      - SHARED_DIR=${SHARED_DIR}
+      - CONFIG_DIR=${CONFIG_DIR}
+      - BOOTNODE_ADDRESS=${BOOTNODE_ADDRESS}
+      - BOOTNODE_PORT=${BOOTNODE_PORT}
+      - BOOTNODE_DIR=${BOOTNODE_DIR}
+      - GENESIS_FILE=${GENESIS_FILE}
+    ports:
+      - 30305:30305
+      - 12801:12801
+    depends_on:
+      - bootnode
+    networks:
+      ethnet:
+        ipv4_address: ${NODE1_ADDRESS}
+
+  node_2:
+    build: 
+      context: ${DOCKER_CONTEXT}
+      dockerfile: ${DOCKERFILE}
+    volumes:
+      - shared:${SHARED_DIR}
+      - config:${CONFIG_DIR}
+    env_file:
+      - path: './deployments/environments/local/node2.env'
+        required: true 
+    environment:
+      - NETWORKID=${NETWORKID}
+      - SHARED_DIR=${SHARED_DIR}
+      - CONFIG_DIR=${CONFIG_DIR}
+      - BOOTNODE_ADDRESS=${BOOTNODE_ADDRESS}
+      - BOOTNODE_PORT=${BOOTNODE_PORT}
+      - BOOTNODE_DIR=${BOOTNODE_DIR}
+      - GENESIS_FILE=${GENESIS_FILE}
+    ports:
+      - 30306:30306
+      - 3585:3585
+      - 12800:12800
+    depends_on:
+      - bootnode
+    networks:
+      ethnet:
+        ipv4_address: ${NODE2_ADDRESS}
+
+networks:
+  ethnet:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: ${SUBNET_NETWORK}
+          gateway: ${GATEWAY_NETWORK}
+
+volumes:
+  shared:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./shared
+  config:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./config
